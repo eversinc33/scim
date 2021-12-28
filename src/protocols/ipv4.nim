@@ -3,7 +3,6 @@ import std/nativesockets
 import ./udp
 import ../common/osi_layers
 
-
 type
     IPv4_Header* = object
         ver_len*: uint8 # version | header length
@@ -66,23 +65,26 @@ method to_buf*(packet: IPv4_Packet): ptr byte =
     return buf
 
 proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_PROTOCOL_TCP, total_length: uint16 = uint16(sizeof(IPv4_header))): IPv4_Packet =
-    var iphdr = IPv4_Header() # refactor
+
     let version: uint8 = uint8(4) shl 4
     let header_length: uint8 = 5
-    iphdr.ver_len = bitor(version, header_length)
-    iphdr.tos = 16
-    iphdr.id = htons(id)
-    iphdr.ttl = 64
-    iphdr.proto = protocol 
-    iphdr.src = src_addr 
-    iphdr.dest = dst_addr
-    iphdr.total_length = total_length
 
-    result = IPv4_Packet(header: iphdr)
+    result = IPv4_Packet(
+        header: IPv4_Header(
+            ver_len: bitor(version, header_length),
+            tos: 16,
+            id: htons(id),
+            ttl: 64,
+            proto: IP_PROTOCOL_TCP,
+            src: src_addr,
+            dest: dst_addr,
+            total_length: total_length
+         )
+    )
 
 # TODO: when adding payload to payload, exec callback to adjust length and checksum
 # TODO: overload `+` , add payload and adjust protocol depending on payload
-
 proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result = ippkt
+    result.header.proto = IP_PROTOCOL_UDP
     result.data = unsafeAddr udppkt
