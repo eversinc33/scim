@@ -9,7 +9,7 @@ type
         checksum*: uint16
 
     UDP_Packet* = object of TransportLayerProtocol
-        header*: ptr byte
+        header*: UDP_Header
         payload*: ptr byte
 
 proc h_UDP*(port_src, port_dst: uint16): UDP_Packet =
@@ -18,15 +18,15 @@ proc h_UDP*(port_src, port_dst: uint16): UDP_Packet =
     udphdr.dest = htons(port_dst)
     udphdr.checksum = 0 # TODO checksum
 
-    result = UDP_Packet(header: cast[ptr byte](udphdr))
+    result = UDP_Packet(header: udphdr)
 
 method to_buf*(packet: UDP_Packet): ptr byte =
-    var hdrlen = cast[UDP_Header](packet.header).length
+    var hdrlen = packet.header.length
     var buf = cast[ptr byte](alloc(hdrlen))
     buf.zeroMem(hdrlen)
 
     # copy header
-    copyMem(buf, packet.header, sizeof(UDP_Header))
+    copyMem(buf, cast[pointer](packet.header), sizeof(UDP_Header))
 
     # copy payload
     var p_payload = cast[int](buf) + sizeof(UDP_Header)
@@ -37,7 +37,7 @@ method to_buf*(packet: UDP_Packet): ptr byte =
 
 proc `+`*(udppkt: UDP_Packet, udp_payload: openArray[byte]): UDP_Packet =
     result = udppkt
-    cast[UDP_Header](result.header).length = htons(uint16(sizeof(UDP_Header)) + uint16(udp_payload.len)) 
+    result.header.length = htons(uint16(sizeof(UDP_Header)) + uint16(udp_payload.len)) 
 
     # copy payload
     var p = cast[ptr byte](alloc(udp_payload.len))

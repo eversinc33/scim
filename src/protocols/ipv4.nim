@@ -1,6 +1,5 @@
 import std/bitops
 import std/nativesockets
-import std/strutils
 import ./udp
 import ../common/osi_layers
 
@@ -18,7 +17,7 @@ type
         src*: uint32
         dest*: uint32
 
-    IPv4_Packet* = object
+    IPv4_Packet* = object of NetworkLayerPacket
         header*: IPv4_Header
         data*: ptr TransportLayerProtocol
 
