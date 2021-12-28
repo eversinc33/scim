@@ -19,7 +19,7 @@ type
         dest*: uint32
 
     IPv4_Packet* = object
-        header*: ptr IPv4_Header
+        header*: IPv4_Header
         data*: ptr TransportLayerProtocol
 
 const 
@@ -79,7 +79,7 @@ proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_
     iphdr.dest = dst_addr
     iphdr.total_length = total_length
 
-    result = IPv4_Packet(header: addr iphdr)
+    result = IPv4_Packet(header: iphdr)
 
 # TODO: when adding payload to payload, exec callback to adjust length and checksum
 # TODO: overload `+` , add payload and adjust protocol depending on payload
