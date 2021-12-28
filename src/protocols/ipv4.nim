@@ -19,8 +19,8 @@ type
         dest*: uint32
 
     IPv4_Packet* = object
-        header*: IPv4_Header
-        data*: TransportLayerProtocol
+        header*: ptr IPv4_Header
+        data*: ptr TransportLayerProtocol
 
 const 
     IP_LOOPBACK_ADDR* = 0x0100007F
@@ -62,7 +62,7 @@ method to_buf*(packet: IPv4_Packet): ptr byte =
 
     # copy encapsulated data
     var p_payload = cast[int](buf) + sizeof(IPv4_Header)
-    copyMem(cast[ptr byte](p_payload), packet.data.to_buf(), packet.header.total_length - uint16(sizeof(IPv4_Header)))
+    copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), packet.header.total_length - uint16(sizeof(IPv4_Header)))
 
     return buf
 
@@ -79,10 +79,10 @@ proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_
     iphdr.dest = dst_addr
     iphdr.total_length = total_length
 
-    result = IPv4_Packet(header: iphdr)
+    result = IPv4_Packet(header: addr iphdr)
 
 # TODO: when adding payload to payload, exec callback to adjust length and checksum
 # TODO: overload `+` , add payload and adjust protocol depending on payload
 proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result = ippkt
-    result.data = udppkt
+    result.data = unsafeAddr udppkt

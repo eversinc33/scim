@@ -12,7 +12,7 @@ import strutils
 import protocols/[ipv4]
 
 test "ipv4 checksum calculated correctly":
-  var iphdr = h_IP(IP_LOOPBACK_ADDR, IP_LOOPBACK_ADDR, protocol = IP_PROTOCOL_UDP)
+  var iphdr = h_IP(IP_LOOPBACK_ADDR, IP_LOOPBACK_ADDR, protocol=IP_PROTOCOL_UDP)
   iphdr.total_length = htons(32)
   iphdr.checksum = calc_ipv4_checksum(iphdr)
   echo "[*] ipv4_checksum: " & iphdr.checksum.toHex
