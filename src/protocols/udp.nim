@@ -8,7 +8,7 @@ type
         length*: uint16
         checksum*: uint16
 
-    UDP_Packet* = ref object of TransportLayerProtocol
+    UDP_Packet* = object of TransportLayerProtocol
         header*: ptr byte
         payload*: ptr byte
 

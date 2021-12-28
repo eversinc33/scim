@@ -83,6 +83,7 @@ proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_
 
 # TODO: when adding payload to payload, exec callback to adjust length and checksum
 # TODO: overload `+` , add payload and adjust protocol depending on payload
+
 proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result = ippkt
     result.data = unsafeAddr udppkt

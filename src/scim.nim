@@ -2,9 +2,6 @@ import std/nativesockets
 import std/net
 import protocols/[ipv4, udp]
 
-
-
-
 when isMainModule:
     let socket = newsocket(AF_INET, SOCK_RAW, IPPROTO_RAW)
     let udp_payload = [byte 0xDE, 0xAD, 0x00, 0xAF, 0x00]
@@ -16,6 +13,8 @@ when isMainModule:
     var send_buf: ptr byte = cast[ptr byte](alloc(total_len))
     send_buf.zeroMem(total_len)
     copyMem(send_buf, packet.to_buf(), total_len)
+
+    echo(repr(packet))
 
     var address = "127.0.0.1"
     var port = Port(666)
