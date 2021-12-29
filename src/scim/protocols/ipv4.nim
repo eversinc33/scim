@@ -1,6 +1,7 @@
 import std/bitops
 import std/nativesockets
 import ./udp
+import ./tcp
 import ../common/osi_layers
 
 type
@@ -104,4 +105,16 @@ proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
 
     # recalc length and checksum
     result.header.total_length = htons(uint16(sizeof(IPv4_header) + udppkt.get_length()))
+    result.header.checksum = calc_ipv4_checksum(result.header)
+
+proc `+`*(ippkt: IPv4_Packet, tcppkt: TCP_Packet): IPv4_Packet =
+    result = ippkt
+    result.metadata.has_encapsulated_payload = true
+
+    # set protocol and data
+    result.header.proto = IP_PROTOCOL_TCP
+    result.data = unsafeAddr tcppkt
+
+    # recalc length and checksum
+    result.header.total_length = htons(uint16(sizeof(IPv4_header) + tcppkt.get_length()))
     result.header.checksum = calc_ipv4_checksum(result.header)
