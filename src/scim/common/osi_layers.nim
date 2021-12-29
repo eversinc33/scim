@@ -8,18 +8,20 @@ type
     TransportLayerPacket* = object of RootObj
     NetworkLayerPacket* = object of RootObj
 
-method to_buf*(packet: NetworkLayerPacket): ptr byte =
-    # implemented by subclasses
-    return nil
+    NotImplementedYetException* = object of Defect
 
-method to_buf*(packet: TransportLayerPacket): ptr byte =
+method to_buf*(packet: NetworkLayerPacket): ptr byte {.base.} =
     # implemented by subclasses
-    return nil
+    raise newException(NotImplementedYetException, "Base method called. This should be implemented by the subclass")
 
-method get_length*(packet: NetworkLayerPacket): int =
+method to_buf*(packet: TransportLayerPacket): ptr byte {.base.} =
     # implemented by subclasses
-    return 0
+    raise newException(NotImplementedYetException, "Base method called. This should be implemented by the subclass")
 
-method get_length*(packet: TransportLayerPacket): int =
+method get_length*(packet: NetworkLayerPacket): int {.base.} =
     # implemented by subclasses
-    return 0
+    raise newException(NotImplementedYetException, "Base method called. This should be implemented by the subclass")
+
+method get_length*(packet: TransportLayerPacket): int {.base.} =
+    # implemented by subclasses
+    raise newException(NotImplementedYetException, "Base method called. This should be implemented by the subclass")
