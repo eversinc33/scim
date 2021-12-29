@@ -18,7 +18,7 @@ type
 
     IPv4_Packet* = object of NetworkLayerPacket
         header*: IPv4_Header
-        data*: ptr TransportLayerProtocol
+        data*: ptr TransportLayerPacket
         metadata*: PacketMetaData 
 
 const 
@@ -50,11 +50,11 @@ proc calc_ipv4_checksum*(ip_header: IPv4_Header): uint16 =
         i += 2
 
     # Calculate the bitwise complement of the sum. This is the required value of the checksum field.
-    return htons(bitnot(uint16(checksum)))
+    return bitnot(uint16(checksum))
 
 method to_buf*(packet: IPv4_Packet): ptr byte =
-    var buf = cast[ptr byte](alloc(packet.header.total_length))
-    buf.zeroMem(packet.header.total_length)
+    var buf = cast[ptr byte](alloc(packet.get_length()))
+    buf.zeroMem(packet.get_length())
 
     # copy header
     copyMem(buf, unsafeAddr packet.header, sizeof(IPv4_Header))
@@ -62,11 +62,16 @@ method to_buf*(packet: IPv4_Packet): ptr byte =
     # copy encapsulated data
     if packet.metadata.has_encapsulated_payload:
         var p_payload = cast[int](buf) + sizeof(IPv4_Header)
-        copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), packet.header.total_length - uint16(sizeof(IPv4_Header)))
+        copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), uint16(packet.get_length() - sizeof(IPv4_Header)))
 
     return buf
 
-proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_PROTOCOL_TCP, total_length: uint16 = uint16(sizeof(IPv4_header))): IPv4_Packet =
+proc h_IP*(
+        src_addr, dst_addr: uint32, 
+        id: uint16 = 10201, 
+        protocol: uint8 = IP_PROTOCOL_TCP, 
+        total_length: uint16 = uint16(sizeof(IPv4_header))
+    ): IPv4_Packet =
 
     let version: uint8 = uint8(4) shl 4
     let header_length: uint8 = 5
@@ -80,14 +85,23 @@ proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_
             proto: protocol,
             src: src_addr,
             dest: dst_addr,
-            total_length: total_length
+            total_length: htons(total_length)
          )
     )
 
-# TODO: when adding payload to payload, exec callback to adjust length and checksum
-# TODO: overload `+` , add payload and adjust protocol depending on payload
+    result.header.checksum = calc_ipv4_checksum(result.header)
+
+method get_length*(packet: IPv4_Packet): int =
+    return int(ntohs(packet.header.total_length))
+
 proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result = ippkt
+    result.metadata.has_encapsulated_payload = true
+
+    # set protocol and data
     result.header.proto = IP_PROTOCOL_UDP
     result.data = unsafeAddr udppkt
-    result.metadata.has_encapsulated_payload = true
+
+    # recalc length and checksum
+    result.header.total_length = htons(uint16(sizeof(IPv4_header) + udppkt.get_length()))
+    result.header.checksum = calc_ipv4_checksum(result.header)

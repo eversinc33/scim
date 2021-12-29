@@ -8,7 +8,7 @@ type
         length*: uint16
         checksum*: uint16
 
-    UDP_Packet* = object of TransportLayerProtocol
+    UDP_Packet* = object of TransportLayerPacket
         header*: UDP_Header
         payload*: ptr byte
 
@@ -39,15 +39,19 @@ method to_buf*(packet: UDP_Packet): ptr byte =
 
     return buf
 
+method get_length*(packet: UDP_Packet): int =
+    return int(ntohs(packet.header.length))
+
 
 proc `+`*(udppkt: UDP_Packet, udp_payload: openArray[byte]): UDP_Packet =
     result = udppkt
-
-    # calc packet length
-    result.header.length = htons(uint16(sizeof(UDP_Header)) + uint16(udp_payload.len)) 
 
     # save udp payload to packet
     var p = cast[ptr byte](alloc(udp_payload.len))
     p.zeroMem(sizeof(udp_payload))
     copyMem(p, unsafeAddr udp_payload, sizeof(UDP_Header))
     result.payload = p
+
+    # calc packet length
+    result.header.length = htons(uint16(sizeof(UDP_Header)) + uint16(udp_payload.len)) 
+    # TODO recalc checksum
