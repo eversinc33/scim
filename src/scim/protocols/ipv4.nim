@@ -19,6 +19,7 @@ type
     IPv4_Packet* = object of NetworkLayerPacket
         header*: IPv4_Header
         data*: ptr TransportLayerProtocol
+        metadata*: PacketMetaData 
 
 const 
     IP_LOOPBACK_ADDR* = 0x0100007F
@@ -59,8 +60,9 @@ method to_buf*(packet: IPv4_Packet): ptr byte =
     copyMem(buf, unsafeAddr packet.header, sizeof(IPv4_Header))
 
     # copy encapsulated data
-    var p_payload = cast[int](buf) + sizeof(IPv4_Header)
-    copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), packet.header.total_length - uint16(sizeof(IPv4_Header)))
+    if packet.metadata.has_encapsulated_payload:
+        var p_payload = cast[int](buf) + sizeof(IPv4_Header)
+        copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), packet.header.total_length - uint16(sizeof(IPv4_Header)))
 
     return buf
 
@@ -75,7 +77,7 @@ proc h_IP*(src_addr, dst_addr: uint32, id: uint16 = 10201, protocol: uint8 = IP_
             tos: 16,
             id: htons(id),
             ttl: 64,
-            proto: IP_PROTOCOL_TCP,
+            proto: protocol,
             src: src_addr,
             dest: dst_addr,
             total_length: total_length
@@ -88,3 +90,4 @@ proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result = ippkt
     result.header.proto = IP_PROTOCOL_UDP
     result.data = unsafeAddr udppkt
+    result.metadata.has_encapsulated_payload = true

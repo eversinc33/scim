@@ -1,4 +1,8 @@
 type 
+    PacketMetaData* = object  
+        length*: uint16
+        has_encapsulated_payload*: bool
+
     Header* = object of RootObj
 
     TransportLayerProtocol* = object of RootObj
