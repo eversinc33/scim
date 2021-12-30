@@ -4,6 +4,9 @@ import ./udp
 import ./tcp
 import ../common/osi_layers
 
+const
+    IPv4_HEADER_SIZE* = 20
+
 type
     IPv4_Header* = object
         ver_len*: uint8 # version | header length
@@ -58,12 +61,12 @@ method to_buf*(packet: IPv4_Packet): ptr byte =
     buf.zeroMem(packet.get_length())
 
     # copy header
-    copyMem(buf, unsafeAddr packet.header, sizeof(IPv4_Header))
+    copyMem(buf, unsafeAddr packet.header, IPv4_HEADER_SIZE)
 
     # copy encapsulated data
     if packet.metadata.has_encapsulated_payload:
-        var p_payload = cast[int](buf) + sizeof(IPv4_Header)
-        copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), uint16(packet.get_length() - sizeof(IPv4_Header)))
+        var p_payload = cast[int](buf) + IPv4_HEADER_SIZE
+        copyMem(cast[ptr byte](p_payload), packet.data[].to_buf(), uint16(packet.get_length() - IPv4_HEADER_SIZE))
 
     return buf
 
@@ -71,7 +74,7 @@ proc h_IP*(
         src_addr, dst_addr: uint32, 
         id: uint16 = 10201, 
         protocol: uint8 = IP_PROTOCOL_TCP, 
-        total_length: uint16 = uint16(sizeof(IPv4_header))
+        total_length: uint16 = uint16(IPv4_HEADER_SIZE)
     ): IPv4_Packet =
 
     let version: uint8 = uint8(4) shl 4
@@ -104,7 +107,7 @@ proc `+`*(ippkt: IPv4_Packet, udppkt: UDP_Packet): IPv4_Packet =
     result.data = unsafeAddr udppkt
 
     # recalc length and checksum
-    result.header.total_length = htons(uint16(sizeof(IPv4_header) + udppkt.get_length()))
+    result.header.total_length = htons(uint16(IPv4_HEADER_SIZE + udppkt.get_length()))
     result.header.checksum = calc_ipv4_checksum(result.header)
 
 proc `+`*(ippkt: IPv4_Packet, tcppkt: TCP_Packet): IPv4_Packet =
@@ -116,5 +119,5 @@ proc `+`*(ippkt: IPv4_Packet, tcppkt: TCP_Packet): IPv4_Packet =
     result.data = unsafeAddr tcppkt
 
     # recalc length and checksum
-    result.header.total_length = htons(uint16(sizeof(IPv4_header) + tcppkt.get_length()))
+    result.header.total_length = htons(uint16(IPv4_HEADER_SIZE + tcppkt.get_length()))
     result.header.checksum = calc_ipv4_checksum(result.header)

@@ -86,9 +86,9 @@ proc `+`*(tcppkt: TCP_Packet, tcp_payload: openArray[byte]): TCP_Packet =
     # save TCP payload to packet
     var p = cast[ptr byte](alloc(tcp_payload.len))
     p.zeroMem(sizeof(tcp_payload))
-    copyMem(p, unsafeAddr tcp_payload, sizeof(TCP_Header))
+    copyMem(p, unsafeAddr tcp_payload, TCP_HEADER_LEN)
     result.payload = p
 
     # TODO calc packet length
-    # result.set_length(htons(uint16(sizeof(TCP_Header)) + uint16(tcp_payload.len)))
+    # result.set_length(htons(uint16(TCP_HEADER_LEN) + uint16(tcp_payload.len)))
     # TODO recalc checksum
