@@ -1,7 +1,7 @@
 # Package
 
 version       = "0.0.1"
-author        = "Sven Rath"
+author        = "eversinc33"
 description   = "Packet manipulation library"
 license       = "MIT"
 srcDir        = "src"

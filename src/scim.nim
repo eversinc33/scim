@@ -1,7 +1,6 @@
 import std/nativesockets
 import std/net
-import protocols/[ipv4, ethernet]
-import os
+import scim/protocols/[ipv4, ethernet]
 
 proc send_packet*(frame: ETH_Frame) =
     let socket = createNativeSocket(AF_INET, SOCK_RAW, IPPROTO_RAW)
@@ -9,6 +8,7 @@ proc send_packet*(frame: ETH_Frame) =
 
     var send_buf = frame.to_buf()
 
+    raise newException(Exception, "Not implemented yet")
     # TODO: send eth frames
     
 
